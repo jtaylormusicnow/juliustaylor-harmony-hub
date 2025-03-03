@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Play, Music, Headphones, Users, ShoppingBag } from 'lucide-react';
@@ -50,7 +49,7 @@ const featuredArtists = [
   {
     id: '4',
     name: 'Crimson Skies',
-    image: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3',
+    image: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=2670&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     genre: 'Lo-Fi',
     songTitle: 'Chill Vibes',
     previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
@@ -65,7 +64,7 @@ const featuredBeats = [
     id: '1',
     title: 'Euphoria',
     producedBy: 'JuliusTaylor',
-    cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3',
+    cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2670&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     genre: 'Trap',
     bpm: 140,
     previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
@@ -157,24 +156,19 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Hero Section */}
+      {/* Hero Section with New Banner */}
       <section className="relative py-32 md:py-48 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-black/20 z-10" />
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
+          <div className="absolute inset-0 bg-black/60 z-10" />
+          <img
+            src="/lovable-uploads/8fa2b8ad-3b4a-4b50-8418-05503cdf4f42.png"
+            alt="JuliusTaylor"
             className="w-full h-full object-cover"
-            poster="https://images.unsplash.com/photo-1526327760257-75f515c74478?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3"
-          >
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-nightclub-3389-large.mp4" type="video/mp4" />
-          </video>
+          />
         </div>
         
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl mx-auto text-center">
             <span className={`inline-block px-4 py-2 rounded-full bg-primary/20 text-primary mb-6 transition-all duration-700 ${
               heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}>The Hub for Music Creators</span>
@@ -185,13 +179,13 @@ const Index = () => {
               Elevate Your Sound with <span className="text-gradient">JuliusTaylor</span>
             </h1>
             
-            <p className={`text-xl text-white/80 mb-8 max-w-2xl transition-all duration-700 delay-200 ${
+            <p className={`text-xl text-white/80 mb-8 max-w-2xl mx-auto transition-all duration-700 delay-200 ${
               heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}>
               A platform for artists, producers, and music lovers to connect, create, and collaborate. Join our community today.
             </p>
             
-            <div className={`flex flex-wrap gap-4 transition-all duration-700 delay-300 ${
+            <div className={`flex flex-wrap justify-center gap-4 transition-all duration-700 delay-300 ${
               heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}>
               <Link 
