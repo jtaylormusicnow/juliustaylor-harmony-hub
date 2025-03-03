@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Play, Music, Headphones, Users, ShoppingBag } from 'lucide-react';
@@ -49,7 +50,7 @@ const featuredArtists = [
   {
     id: '4',
     name: 'Crimson Skies',
-    image: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=2670&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3',
     genre: 'Lo-Fi',
     songTitle: 'Chill Vibes',
     previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
@@ -64,7 +65,7 @@ const featuredBeats = [
     id: '1',
     title: 'Euphoria',
     producedBy: 'JuliusTaylor',
-    cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2670&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3',
     genre: 'Trap',
     bpm: 140,
     previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
@@ -159,12 +160,17 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative py-32 md:py-48 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/40 z-10" />
-          <img
-            src="/lovable-uploads/9ad931bf-32fe-43d4-8db9-76c026598e32.png"
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-black/20 z-10" />
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
             className="w-full h-full object-cover"
-            alt="JuliusTaylor Banner"
-          />
+            poster="https://images.unsplash.com/photo-1526327760257-75f515c74478?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3"
+          >
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-nightclub-3389-large.mp4" type="video/mp4" />
+          </video>
         </div>
         
         <div className="container mx-auto px-6 relative z-10">
