@@ -209,14 +209,21 @@ const Beats = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="pt-24 pb-12 md:py-32 bg-gradient-to-b from-background to-secondary/20">
+      {/* Hero Section with your banner image */}
+      <section 
+        className="pt-24 pb-12 md:py-32 bg-gradient-to-b from-background to-secondary/20"
+        style={{
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('/lovable-uploads/9ad931bf-32fe-43d4-8db9-76c026598e32.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
         <div className="container mx-auto px-6">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 text-white">
               Premium <span className="text-gradient">Beats</span> Collection
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
+            <p className="text-xl text-white/80 mb-8 max-w-2xl">
               Find the perfect beat for your next project. Browse our collection of high-quality beats with flexible licensing options.
             </p>
           </div>

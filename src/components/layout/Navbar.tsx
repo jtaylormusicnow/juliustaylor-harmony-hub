@@ -61,7 +61,12 @@ const Navbar = () => {
           to="/" 
           className="text-2xl font-display font-bold flex items-center"
         >
-          <span className="text-gradient">JuliusTaylor</span>
+          <span className="text-gradient mr-2">JuliusTaylor</span>
+          <img 
+            src="/lovable-uploads/9cd17e6d-830d-4ef8-b15a-c8afb8b9ad3e.png" 
+            alt="Julius Taylor Logo" 
+            className="h-10 w-auto"
+          />
         </Link>
 
         {/* Desktop Navigation */}
