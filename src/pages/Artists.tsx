@@ -111,14 +111,23 @@ const Artists = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="pt-32 pb-16 md:py-40 bg-gradient-to-b from-background to-secondary/20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6">
+      {/* Hero Section with New Banner */}
+      <section className="relative pt-32 pb-16 md:py-40 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-black/70 z-10" />
+          <img
+            src="/lovable-uploads/d35ce910-7ebb-4e24-a8d2-a8459dc62021.png"
+            alt="Artist Profile"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 text-white">
               Discover Amazing <span className="text-gradient">Artists</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
+            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
               Explore our curated collection of talented musicians from around the world. Listen to their tracks and connect with them on your favorite platforms.
             </p>
           </div>
