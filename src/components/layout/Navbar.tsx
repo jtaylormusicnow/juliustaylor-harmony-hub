@@ -2,12 +2,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Moon, Sun } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -110,12 +112,21 @@ const Navbar = () => {
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <Link
-            to="/login"
-            className="px-5 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Sign In
-          </Link>
+          {user ? (
+            <Link
+              to="/feed"
+              className="px-5 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Feed
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="px-5 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
 
         {/* Mobile Navigation */}
@@ -180,13 +191,23 @@ const Navbar = () => {
           >
             Merch
           </Link>
-          <Link
-            to="/login"
-            className="px-6 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-            onClick={() => setIsOpen(false)}
-          >
-            Sign In
-          </Link>
+          {user ? (
+            <Link
+              to="/feed"
+              className="px-6 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Feed
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="px-6 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       </div>
     </nav>
