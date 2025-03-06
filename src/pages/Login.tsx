@@ -52,21 +52,27 @@ const Login = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      setIsSubmitting(true);
       await signInWithGoogle();
       // Redirect is handled by OAuth flow
     } catch (error: any) {
       console.error('Google sign in error:', error);
+      setIsSubmitting(false);
     }
   };
 
   const handleFacebookSignIn = async () => {
     try {
+      setIsSubmitting(true);
       await signInWithFacebook();
       // Redirect is handled by OAuth flow
     } catch (error: any) {
       console.error('Facebook sign in error:', error);
+      setIsSubmitting(false);
     }
   };
+
+  console.log('Login component - rendering with user:', user);
 
   return (
     <div className="min-h-screen flex flex-col">
