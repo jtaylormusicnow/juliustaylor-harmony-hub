@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play, Music, Calendar, Users, Headphones, Clock } from 'lucide-react';
+import { ArrowRight, Play, Music } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import FeaturedArtist from '../components/ui/FeaturedArtist';
@@ -106,97 +106,6 @@ const artists = [
   }
 ];
 
-// Mock data for upcoming listening parties
-const listeningParties = [
-  {
-    id: '1',
-    title: 'Cosmic Journey EP Premiere',
-    artistName: 'JuliusTaylor',
-    image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-    date: 'June 15, 2024',
-    time: '8:00 PM EST',
-    description: 'Join JuliusTaylor for an exclusive first listen of the Cosmic Journey EP with live commentary on the production process.',
-    attendees: 243,
-    exclusive: 'Custom Drum Kit'
-  },
-  {
-    id: '2',
-    title: 'Summer Vibes Collection',
-    artistName: 'Echo Valley',
-    image: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-    date: 'June 23, 2024',
-    time: '7:00 PM EST',
-    description: 'Echo Valley presents a collection of summer-inspired beats with detailed breakdowns of each track.',
-    attendees: 187,
-    exclusive: '30% Off Selected Beats'
-  },
-  {
-    id: '3',
-    title: 'Future Bass Masterclass',
-    artistName: 'Synth Collective',
-    image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-    date: 'July 5, 2024',
-    time: '9:00 PM EST',
-    description: 'Synth Collective breaks down their production techniques for their new Future Bass compilation.',
-    attendees: 156,
-    exclusive: 'Synth Presets Package'
-  }
-];
-
-const ListeningPartyCard = ({ party }) => {
-  return (
-    <div className="flex flex-col rounded-xl overflow-hidden border border-border/50 bg-card/50 hover:shadow-lg transition-all duration-300">
-      <div className="relative aspect-video">
-        <img 
-          src={party.image} 
-          alt={party.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
-          <h3 className="text-xl font-bold text-white">{party.title}</h3>
-          <p className="text-white/80">by {party.artistName}</p>
-        </div>
-      </div>
-      
-      <div className="p-5 flex-1 flex flex-col">
-        <div className="flex items-center gap-3 text-muted-foreground mb-3">
-          <div className="flex items-center gap-1">
-            <Calendar size={16} />
-            <span className="text-sm">{party.date}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock size={16} />
-            <span className="text-sm">{party.time}</span>
-          </div>
-        </div>
-        
-        <p className="text-sm text-muted-foreground mb-4">{party.description}</p>
-        
-        <div className="mt-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-1">
-              <Users size={16} className="text-primary" />
-              <span className="text-sm">{party.attendees} attending</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Headphones size={16} className="text-primary" />
-              <span className="text-sm font-medium">Exclusive: {party.exclusive}</span>
-            </div>
-          </div>
-          
-          <Link
-            to={`/listening-party/${party.id}`}
-            className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-          >
-            <span>Join Listening Party</span>
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const Artists = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -221,45 +130,6 @@ const Artists = () => {
             <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
               Explore our curated collection of talented musicians from around the world. Listen to their tracks and connect with them on your favorite platforms.
             </p>
-          </div>
-        </div>
-      </section>
-      
-      {/* Listening Parties Section - NEW */}
-      <section className="py-16 md:py-24 bg-secondary/20">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                Upcoming Listening Parties
-              </h2>
-              <p className="text-muted-foreground max-w-xl">
-                Join exclusive live events where artists premiere new tracks with real-time commentary. React, engage, and unlock exclusive content.
-              </p>
-            </div>
-            <Link 
-              to="/listening-parties" 
-              className="hidden md:flex items-center text-primary hover:text-primary/80"
-            >
-              <span>View All Events</span>
-              <ArrowRight size={16} className="ml-2" />
-            </Link>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {listeningParties.map((party) => (
-              <ListeningPartyCard key={party.id} party={party} />
-            ))}
-          </div>
-          
-          <div className="flex md:hidden justify-center">
-            <Link 
-              to="/listening-parties" 
-              className="flex items-center text-primary hover:text-primary/80"
-            >
-              <span>View All Events</span>
-              <ArrowRight size={16} className="ml-2" />
-            </Link>
           </div>
         </div>
       </section>
