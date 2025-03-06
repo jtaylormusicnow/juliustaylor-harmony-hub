@@ -1,75 +1,166 @@
 
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import { Button } from '@/components/ui/button';
-import { Upload, X, Music, Video, Camera, Clock } from 'lucide-react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Upload, X, ArrowLeft, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
 const CreateContent = () => {
-  const { user } = useAuth();
-  const [uploadType, setUploadType] = useState<'video' | 'image' | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isVideo, setIsVideo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Create a preview URL for the uploaded file
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    
-    // Automatically determine type from file
-    if (file.type.startsWith('video/')) {
-      setUploadType('video');
-    } else if (file.type.startsWith('image/')) {
-      setUploadType('image');
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      
+      // Check if file is an image or video
+      if (selectedFile.type.startsWith('image/')) {
+        setIsVideo(false);
+      } else if (selectedFile.type.startsWith('video/')) {
+        setIsVideo(true);
+        
+        // Check if video is less than 30 seconds
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = function() {
+          window.URL.revokeObjectURL(video.src);
+          if (video.duration > 30) {
+            toast({
+              title: "Video too long",
+              description: "Please upload a video that is 30 seconds or less",
+              variant: "destructive",
+            });
+            setFile(null);
+            setPreview(null);
+            return;
+          }
+        };
+        video.src = URL.createObjectURL(selectedFile);
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image or video file",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setFile(selectedFile);
+      setPreview(URL.createObjectURL(selectedFile));
     }
   };
 
-  const clearUpload = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setPreviewUrl(null);
-    setUploadType(null);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     
-    if (!previewUrl) {
-      toast({
-        title: "No content selected",
-        description: "Please upload a video or image to continue",
-        variant: "destructive",
-      });
-      return;
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const droppedFile = e.dataTransfer.files[0];
+      
+      // Check if file is an image or video
+      if (droppedFile.type.startsWith('image/')) {
+        setIsVideo(false);
+        setFile(droppedFile);
+        setPreview(URL.createObjectURL(droppedFile));
+      } else if (droppedFile.type.startsWith('video/')) {
+        setIsVideo(true);
+        
+        // Check if video is less than 30 seconds
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = function() {
+          window.URL.revokeObjectURL(video.src);
+          if (video.duration > 30) {
+            toast({
+              title: "Video too long",
+              description: "Please upload a video that is 30 seconds or less",
+              variant: "destructive",
+            });
+            return;
+          } else {
+            setFile(droppedFile);
+            setPreview(URL.createObjectURL(droppedFile));
+          }
+        };
+        video.src = URL.createObjectURL(droppedFile);
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image or video file",
+          variant: "destructive",
+        });
+      }
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const clearFile = () => {
+    setFile(null);
+    setPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadContent = async () => {
+    if (!file || !user) return;
     
     try {
       setIsUploading(true);
       
-      // This is a placeholder for the actual upload implementation
-      // In a real app, you would upload the file to Supabase Storage here
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate upload
+      // 1. Upload file to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('media')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // 2. Get public URL for the file
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+      
+      // 3. Insert post into database
+      const { error: insertError } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          media_url: publicUrl,
+          media_type: isVideo ? 'video' : 'image',
+          caption: caption,
+        });
+        
+      if (insertError) throw insertError;
       
       toast({
-        title: "Content posted!",
-        description: "Your content has been successfully shared with your followers.",
+        title: "Success",
+        description: "Your post has been uploaded!",
       });
       
+      // Navigate back to feed
       navigate('/feed');
-    } catch (error) {
+      
+    } catch (error: any) {
+      console.error('Error uploading content:', error.message);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your content. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -78,168 +169,96 @@ const CreateContent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      <main className="flex-1 py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-display font-bold">Create New Content</h1>
-            <p className="text-muted-foreground mt-2">
-              Upload a video or image to share with your followers
-            </p>
-          </div>
-          
-          <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-            <form onSubmit={handleSubmit}>
-              <div className="p-6">
-                <div className="flex flex-col md:flex-row gap-6">
-                  {/* Upload area */}
-                  <div className="flex-1">
-                    {!previewUrl ? (
-                      <label className="block border-2 border-dashed border-border rounded-lg p-12 text-center cursor-pointer hover:bg-secondary/5 transition-colors">
-                        <div className="flex flex-col items-center justify-center">
-                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                            <Upload size={24} className="text-primary" />
-                          </div>
-                          <p className="text-lg font-medium mb-2">
-                            Drag & drop or click to upload
-                          </p>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Supports MP4, MOV, JPG, PNG, GIF (Max: 100MB)
-                          </p>
-                          <Button type="button" variant="outline" size="sm">
-                            Select File
-                          </Button>
-                        </div>
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          accept="video/*,image/*"
-                          onChange={handleFileChange}
-                        />
-                      </label>
-                    ) : (
-                      <div className="relative border border-border rounded-lg overflow-hidden">
-                        <button
-                          type="button"
-                          className="absolute top-2 right-2 p-1 rounded-full bg-background/80 hover:bg-background/95"
-                          onClick={clearUpload}
-                        >
-                          <X size={20} />
-                        </button>
-                        {uploadType === 'video' ? (
-                          <video
-                            src={previewUrl}
-                            controls
-                            className="w-full h-auto max-h-[500px] object-contain"
-                          />
-                        ) : (
-                          <img
-                            src={previewUrl}
-                            alt="Preview"
-                            className="w-full h-auto max-h-[500px] object-contain"
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Upload details */}
-                  <div className="flex-1">
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="caption" className="block text-sm font-medium mb-1">
-                          Caption
-                        </label>
-                        <textarea
-                          id="caption"
-                          placeholder="Write a caption..."
-                          className="w-full h-32 px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                          value={caption}
-                          onChange={(e) => setCaption(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Content Type
-                        </label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            className={`p-4 rounded-lg border ${
-                              uploadType === 'video' 
-                                ? 'border-primary bg-primary/5' 
-                                : 'border-border hover:bg-secondary/5'
-                            } flex items-center gap-3 transition-colors`}
-                            onClick={() => setUploadType('video')}
-                          >
-                            <Video size={20} className={uploadType === 'video' ? 'text-primary' : ''} />
-                            <div className="text-left">
-                              <p className="font-medium">Video</p>
-                              <p className="text-xs text-muted-foreground">Up to 30 seconds</p>
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            className={`p-4 rounded-lg border ${
-                              uploadType === 'image' 
-                                ? 'border-primary bg-primary/5' 
-                                : 'border-border hover:bg-secondary/5'
-                            } flex items-center gap-3 transition-colors`}
-                            onClick={() => setUploadType('image')}
-                          >
-                            <Camera size={20} className={uploadType === 'image' ? 'text-primary' : ''} />
-                            <div className="text-left">
-                              <p className="font-medium">Image</p>
-                              <p className="text-xs text-muted-foreground">JPG, PNG, GIF</p>
-                            </div>
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Expiration
-                        </label>
-                        <div className="flex items-center gap-3 p-4 rounded-lg border border-border">
-                          <Clock size={20} />
-                          <div>
-                            <p className="font-medium">24 Hours</p>
-                            <p className="text-xs text-muted-foreground">
-                              Content will disappear after 24 hours
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 border-t border-border flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/feed')}
-                  disabled={isUploading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!previewUrl || isUploading}
-                >
-                  {isUploading ? 'Posting...' : 'Post Content'}
-                </Button>
-              </div>
-            </form>
-          </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="py-4 px-6 border-b">
+        <div className="flex items-center">
+          <button 
+            onClick={() => navigate(-1)}
+            className="mr-4 p-2 rounded-full hover:bg-secondary/50"
+          >
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="text-xl font-bold">Create Post</h1>
         </div>
-      </main>
+      </header>
       
-      <Footer />
+      <main className="flex-1 p-6 max-w-3xl mx-auto w-full">
+        {preview ? (
+          <div className="relative">
+            <button 
+              onClick={clearFile}
+              className="absolute top-2 right-2 p-2 bg-black/50 rounded-full text-white z-10"
+            >
+              <X size={20} />
+            </button>
+            
+            {isVideo ? (
+              <video 
+                src={preview} 
+                className="w-full aspect-square object-cover rounded-xl"
+                controls
+                autoPlay
+                loop
+              />
+            ) : (
+              <img 
+                src={preview} 
+                alt="Preview" 
+                className="w-full aspect-square object-cover rounded-xl"
+              />
+            )}
+            
+            <div className="mt-6">
+              <label className="block text-sm font-medium mb-2">
+                Caption
+              </label>
+              <textarea
+                placeholder="Write a caption..."
+                className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                rows={4}
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                disabled={isUploading}
+              />
+            </div>
+            
+            <button
+              onClick={uploadContent}
+              disabled={isUploading}
+              className="mt-6 w-full py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                'Post'
+              )}
+            </button>
+          </div>
+        ) : (
+          <div 
+            className="border-2 border-dashed border-border rounded-xl p-12 text-center cursor-pointer hover:bg-secondary/10 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*,video/*"
+              className="hidden"
+            />
+            
+            <Upload size={48} className="mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">Upload a photo or video</h2>
+            <p className="text-muted-foreground mb-6">Drag and drop or click to browse</p>
+            <p className="text-sm text-muted-foreground">Videos must be 30 seconds or less</p>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

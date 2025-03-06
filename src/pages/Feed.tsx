@@ -1,180 +1,267 @@
 
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, MessageCircle, Heart, Share2, MoreHorizontal } from 'lucide-react';
-
-// Sample data for demo purposes
-const DEMO_STORIES = [
-  {
-    id: '1',
-    username: 'johndoe',
-    profilePic: 'https://source.unsplash.com/random/150x150?face-1',
-    content: 'https://source.unsplash.com/random/720x1280?music-1',
-    likes: 423,
-    comments: 89,
-    timeLeft: '4h remaining',
-  },
-  {
-    id: '2',
-    username: 'musicproducer',
-    profilePic: 'https://source.unsplash.com/random/150x150?face-2',
-    content: 'https://source.unsplash.com/random/720x1280?concert-1',
-    likes: 1289,
-    comments: 214,
-    timeLeft: '12h remaining',
-  },
-  {
-    id: '3',
-    username: 'beatmaker',
-    profilePic: 'https://source.unsplash.com/random/150x150?face-3',
-    content: 'https://source.unsplash.com/random/720x1280?dj-1',
-    likes: 876,
-    comments: 134,
-    timeLeft: '18h remaining',
-  },
-  {
-    id: '4',
-    username: 'vocalist',
-    profilePic: 'https://source.unsplash.com/random/150x150?face-4',
-    content: 'https://source.unsplash.com/random/720x1280?singer-1',
-    likes: 632,
-    comments: 98,
-    timeLeft: '6h remaining',
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { ChevronRight, ChevronLeft, MessageSquare, Heart, Share2, Plus } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const Feed = () => {
-  const { user, signOut } = useAuth();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [currentPostIndex, setCurrentPostIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  
-  const handleContentClick = (direction: 'left' | 'right') => {
-    if (direction === 'left' && currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    } else if (direction === 'right' && currentIndex < DEMO_STORIES.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchPosts();
+    
+    // Subscribe to realtime changes
+    const subscription = supabase
+      .channel('posts_channel')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'posts'
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setPosts(prevPosts => [payload.new, ...prevPosts]);
+        } else if (payload.eventType === 'DELETE') {
+          setPosts(prevPosts => prevPosts.filter(post => post.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch posts that haven't expired yet
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          media_url,
+          media_type,
+          caption,
+          created_at,
+          expires_at,
+          views,
+          profiles:user_id (
+            id,
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      setPosts(data || []);
+    } catch (error: any) {
+      console.error('Error fetching posts:', error.message);
+      toast({
+        title: "Error",
+        description: "Could not load posts. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
+  const navigateToNextPost = () => {
+    if (currentPostIndex < posts.length - 1) {
+      setCurrentPostIndex(prevIndex => prevIndex + 1);
+    }
+  };
+
+  const navigateToPrevPost = () => {
+    if (currentPostIndex > 0) {
+      setCurrentPostIndex(prevIndex => prevIndex - 1);
+    }
+  };
+
+  const likePost = async (postId: string) => {
+    // Placeholder for like functionality
+    toast({
+      title: "Liked",
+      description: "You liked this post!",
+    });
+  };
+
+  const sharePost = async (postId: string) => {
+    // Placeholder for share functionality
+    toast({
+      title: "Shared",
+      description: "Post share feature coming soon!",
+    });
+  };
+
+  const navigateToCreatePost = () => {
+    navigate('/create');
+  };
+
+  const navigateToProfile = (userId: string) => {
+    navigate(`/profile/${userId}`);
+  };
+
+  const navigateToMessages = () => {
+    navigate('/messages');
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      <main className="flex-1 flex flex-col">
-        {/* Header section */}
-        <div className="border-b border-border py-4 px-6">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <h1 className="text-2xl font-display font-bold">Feed</h1>
-            <button
-              onClick={() => navigate('/create')}
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg flex items-center gap-2"
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Top Navigation */}
+      <header className="py-4 px-6 border-b">
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-bold">Feed</h1>
+          <div className="flex space-x-4">
+            <button 
+              onClick={navigateToMessages}
+              className="p-2 rounded-full hover:bg-secondary/50"
             >
-              <PlusCircle size={18} />
-              <span>Create</span>
+              <MessageSquare size={24} />
+            </button>
+            <button 
+              onClick={navigateToCreatePost}
+              className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus size={24} />
             </button>
           </div>
         </div>
-        
-        {/* Content feed */}
-        <div className="flex-1 relative overflow-hidden bg-black">
-          {/* Left click area */}
-          <div 
-            className="absolute left-0 top-0 bottom-0 w-1/4 z-10 cursor-pointer" 
-            onClick={() => handleContentClick('left')}
-          />
-          
-          {/* Right click area */}
-          <div 
-            className="absolute right-0 top-0 bottom-0 w-1/4 z-10 cursor-pointer" 
-            onClick={() => handleContentClick('right')}
-          />
-          
-          {/* Content area */}
-          <div 
-            className="flex h-full transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-          >
-            {DEMO_STORIES.map((story) => (
-              <div key={story.id} className="min-w-full h-full relative">
-                {/* Video/Image content */}
-                <img 
-                  src={story.content} 
-                  alt={`Content by ${story.username}`}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+      </header>
+
+      {/* Main Content - Horizontal Scrolling Feed */}
+      <main className="flex-1 relative">
+        {loading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : posts.length > 0 ? (
+          <div className="h-full relative">
+            {/* Navigation Arrows */}
+            {currentPostIndex > 0 && (
+              <button 
+                onClick={navigateToPrevPost}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/20 p-2 rounded-full text-white hover:bg-black/40"
+              >
+                <ChevronLeft size={32} />
+              </button>
+            )}
+            
+            {currentPostIndex < posts.length - 1 && (
+              <button 
+                onClick={navigateToNextPost}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/20 p-2 rounded-full text-white hover:bg-black/40"
+              >
+                <ChevronRight size={32} />
+              </button>
+            )}
+
+            {/* Current Post Display */}
+            <div className="h-full w-full flex items-center justify-center p-4">
+              <div className="max-w-lg w-full bg-card rounded-xl overflow-hidden shadow-lg">
+                {posts[currentPostIndex].media_type === 'video' ? (
+                  <video 
+                    src={posts[currentPostIndex].media_url} 
+                    className="w-full aspect-square object-cover"
+                    controls
+                    autoPlay
+                    loop
+                  />
+                ) : (
+                  <img 
+                    src={posts[currentPostIndex].media_url} 
+                    alt="Post content" 
+                    className="w-full aspect-square object-cover"
+                  />
+                )}
                 
-                {/* User info overlay */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
-                  <div className="flex items-center gap-2">
+                <div className="p-4">
+                  <div className="flex items-center mb-3">
                     <img 
-                      src={story.profilePic} 
-                      alt={story.username} 
-                      className="w-10 h-10 rounded-full border-2 border-white"
+                      src={posts[currentPostIndex].profiles.avatar_url} 
+                      alt={posts[currentPostIndex].profiles.username}
+                      className="w-10 h-10 rounded-full mr-3 cursor-pointer"
+                      onClick={() => navigateToProfile(posts[currentPostIndex].profiles.id)}
                     />
-                    <span className="font-medium text-white text-shadow">{story.username}</span>
+                    <div>
+                      <p className="font-semibold cursor-pointer" onClick={() => navigateToProfile(posts[currentPostIndex].profiles.id)}>
+                        {posts[currentPostIndex].profiles.full_name || posts[currentPostIndex].profiles.username}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        @{posts[currentPostIndex].profiles.username}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs text-white bg-black/30 px-3 py-1 rounded-full">
-                    {story.timeLeft}
-                  </span>
-                </div>
-                
-                {/* Interaction buttons */}
-                <div className="absolute bottom-10 left-4 right-4 flex items-center justify-between z-20">
-                  <div className="flex gap-6">
-                    <button className="flex flex-col items-center">
-                      <Heart size={28} className="text-white" />
-                      <span className="text-xs text-white mt-1">{story.likes}</span>
+                  
+                  <p className="text-sm mb-3">{posts[currentPostIndex].caption}</p>
+                  
+                  <div className="flex space-x-4">
+                    <button 
+                      onClick={() => likePost(posts[currentPostIndex].id)}
+                      className="flex items-center text-sm text-muted-foreground hover:text-primary"
+                    >
+                      <Heart size={18} className="mr-1" />
+                      Like
                     </button>
-                    <button className="flex flex-col items-center">
-                      <MessageCircle size={28} className="text-white" />
-                      <span className="text-xs text-white mt-1">{story.comments}</span>
-                    </button>
-                    <button>
-                      <Share2 size={28} className="text-white" />
+                    <button 
+                      onClick={() => sharePost(posts[currentPostIndex].id)}
+                      className="flex items-center text-sm text-muted-foreground hover:text-primary"
+                    >
+                      <Share2 size={18} className="mr-1" />
+                      Share
                     </button>
                   </div>
-                  <button>
-                    <MoreHorizontal size={28} className="text-white" />
-                  </button>
-                </div>
-                
-                {/* Progress indicator */}
-                <div className="absolute top-0 left-0 right-0 flex gap-1 p-1 z-20">
-                  {DEMO_STORIES.map((_, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`h-1 rounded-full flex-1 ${idx === currentIndex ? 'bg-primary' : 'bg-white/40'}`}
-                    />
-                  ))}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-          
-          {/* Navigation indicators */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
-            {DEMO_STORIES.map((_, idx) => (
-              <button
-                key={idx}
-                className={`w-2 h-2 rounded-full ${idx === currentIndex ? 'bg-primary' : 'bg-white/40'}`}
-                onClick={() => setCurrentIndex(idx)}
-              />
-            ))}
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+            <h2 className="text-2xl font-bold mb-2">No posts yet</h2>
+            <p className="text-muted-foreground mb-6">Be the first to share a moment!</p>
+            <button 
+              onClick={navigateToCreatePost}
+              className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center"
+            >
+              <Plus className="mr-2" size={20} />
+              Create Post
+            </button>
           </div>
-        </div>
+        )}
       </main>
-      
-      <Footer />
 
-      <style jsx>{`
-        .text-shadow {
-          text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
-      `}</style>
+      {/* Progress Bar */}
+      <div className="px-6 py-2 border-t">
+        <div className="flex space-x-1">
+          {posts.map((_, index) => (
+            <div 
+              key={index} 
+              className={`h-1 flex-1 rounded-full ${index === currentPostIndex ? 'bg-primary' : 'bg-secondary'}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <style>
+        {`
+          html, body, #root {
+            height: 100%;
+            overflow-x: hidden;
+          }
+        `}
+      </style>
     </div>
   );
 };
