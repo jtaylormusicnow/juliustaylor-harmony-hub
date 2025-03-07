@@ -129,13 +129,14 @@ export const useFeed = () => {
 
   const fetchComments = async (postId: string) => {
     try {
+      // Fixed query to properly handle the profiles relation
       const { data, error } = await supabase
         .from('comments')
         .select(`
           id,
           content,
           created_at,
-          profiles:user_id (
+          profiles:profiles!user_id (
             id,
             username,
             full_name,
@@ -145,14 +146,21 @@ export const useFeed = () => {
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error in comment query:', error);
+        throw error;
+      }
       
-      setComments(prev => ({
-        ...prev,
-        [postId]: data || []
-      }));
+      // Only update state if we have valid data
+      if (data) {
+        setComments(prev => ({
+          ...prev,
+          [postId]: data
+        }));
+      }
     } catch (error: any) {
       console.error('Error fetching comments:', error.message);
+      // Don't update state with error data
     }
   };
 
