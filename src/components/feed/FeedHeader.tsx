@@ -20,6 +20,10 @@ const FeedHeader: React.FC<FeedHeaderProps> = ({
   currentUserId,
   children
 }) => {
+  const goToProfileDashboard = () => {
+    window.location.href = '/profile';
+  };
+
   return (
     <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b py-3">
       <div className="container mx-auto px-4 flex justify-between items-center">
@@ -30,16 +34,14 @@ const FeedHeader: React.FC<FeedHeaderProps> = ({
 
         <div className="flex items-center gap-2">
           {children}
-          {currentUserId && (
-            <Button 
-              variant="ghost" 
-              onClick={() => navigateToProfile(currentUserId)}
-              className="flex gap-1 items-center"
-            >
-              <User size={20} />
-              <span className="sr-only md:not-sr-only">Profile</span>
-            </Button>
-          )}
+          <Button 
+            variant="ghost" 
+            onClick={goToProfileDashboard}
+            className="flex gap-1 items-center"
+          >
+            <User size={20} />
+            <span className="sr-only md:not-sr-only">Profile</span>
+          </Button>
           <Button variant="ghost" onClick={navigateToMessages} className="flex gap-1 items-center">
             <MessageSquare size={20} />
             <span className="sr-only md:not-sr-only">Messages</span>

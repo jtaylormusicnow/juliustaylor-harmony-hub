@@ -23,6 +23,10 @@ interface PostContentProps {
 }
 
 const PostContent: React.FC<PostContentProps> = ({ post, navigateToProfile }) => {
+  const goToProfileDashboard = () => {
+    window.location.href = '/profile';
+  };
+
   return (
     <div className="max-w-2xl w-full mx-auto bg-card rounded-xl overflow-hidden shadow-lg">
       <div className="p-4 border-b">
@@ -48,7 +52,7 @@ const PostContent: React.FC<PostContentProps> = ({ post, navigateToProfile }) =>
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => navigateToProfile(post.profiles.id)}
+            onClick={goToProfileDashboard}
             className="flex gap-1 items-center"
           >
             <User size={16} />
