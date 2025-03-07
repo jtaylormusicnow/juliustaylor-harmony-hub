@@ -29,7 +29,9 @@ export const useFeed = () => {
     newComment,
     setNewComment,
     showComments,
+    setShowComments,
     commentInputRef,
+    fetchComments,
     toggleComments,
     submitComment
   } = useCommentOperations(user);

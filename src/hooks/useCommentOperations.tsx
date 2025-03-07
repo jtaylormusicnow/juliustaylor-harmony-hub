@@ -42,6 +42,7 @@ export const useCommentOperations = (user: any) => {
           item && 
           item.profiles && 
           typeof item.profiles === 'object' && 
+          item.profiles !== null &&
           'id' in item.profiles && 
           'username' in item.profiles
         ) as unknown as Comment[];
@@ -104,7 +105,9 @@ export const useCommentOperations = (user: any) => {
     newComment,
     setNewComment,
     showComments,
+    setShowComments,
     commentInputRef,
+    fetchComments,
     toggleComments,
     submitComment
   };
