@@ -43,8 +43,9 @@ export const useCommentOperations = (user: any) => {
           item.profiles && 
           typeof item.profiles === 'object' && 
           item.profiles !== null &&
-          'id' in item.profiles && 
-          'username' in item.profiles
+          // Add additional null checks for the properties
+          item.profiles && 'id' in item.profiles && 
+          item.profiles && 'username' in item.profiles
         ) as unknown as Comment[];
         
         setComments(prev => ({
