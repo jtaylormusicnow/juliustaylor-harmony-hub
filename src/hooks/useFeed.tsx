@@ -129,14 +129,14 @@ export const useFeed = () => {
 
   const fetchComments = async (postId: string) => {
     try {
-      // Fixed query to properly handle the profiles relation
+      // Fixed query to correctly join comments with profiles
       const { data, error } = await supabase
         .from('comments')
         .select(`
           id,
           content,
           created_at,
-          profiles:profiles!user_id (
+          profiles(
             id,
             username,
             full_name,
@@ -151,11 +151,17 @@ export const useFeed = () => {
         throw error;
       }
       
-      // Only update state if we have valid data
-      if (data) {
+      // Check if data exists and has the correct structure before updating state
+      if (data && Array.isArray(data)) {
+        // TypeScript validation to ensure proper data structure
+        const validComments = data.filter(item => 
+          item && item.profiles && typeof item.profiles === 'object' && 
+          'id' in item.profiles && 'username' in item.profiles
+        ) as Comment[];
+        
         setComments(prev => ({
           ...prev,
-          [postId]: data
+          [postId]: validComments
         }));
       }
     } catch (error: any) {
