@@ -1,12 +1,14 @@
 
 import React from 'react';
-import { Home, MessageSquare, PlusCircle } from 'lucide-react';
+import { Home, MessageSquare, PlusCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FeedHeaderProps {
   navigateToHome: () => void;
   navigateToMessages: () => void;
   navigateToCreatePost: () => void;
+  navigateToProfile: (userId: string) => void;
+  currentUserId?: string;
   children?: React.ReactNode;
 }
 
@@ -14,6 +16,8 @@ const FeedHeader: React.FC<FeedHeaderProps> = ({
   navigateToHome,
   navigateToMessages,
   navigateToCreatePost,
+  navigateToProfile,
+  currentUserId,
   children
 }) => {
   return (
@@ -26,6 +30,16 @@ const FeedHeader: React.FC<FeedHeaderProps> = ({
 
         <div className="flex items-center gap-2">
           {children}
+          {currentUserId && (
+            <Button 
+              variant="ghost" 
+              onClick={() => navigateToProfile(currentUserId)}
+              className="flex gap-1 items-center"
+            >
+              <User size={20} />
+              <span className="sr-only md:not-sr-only">Profile</span>
+            </Button>
+          )}
           <Button variant="ghost" onClick={navigateToMessages} className="flex gap-1 items-center">
             <MessageSquare size={20} />
             <span className="sr-only md:not-sr-only">Messages</span>
