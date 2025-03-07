@@ -1,50 +1,47 @@
 
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { usePostOperations } from './usePostOperations';
+import { useCommentOperations } from './useCommentOperations';
+import { useNavigation } from './useNavigation';
+import { Post } from '@/types/feed';
 
-export interface Post {
-  id: string;
-  media_url: string;
-  media_type: string;
-  caption: string | null;
-  created_at: string | null;
-  expires_at: string | null;
-  views: number | null;
-  profiles: {
-    id: string;
-    username: string | null;
-    full_name: string | null;
-    avatar_url: string | null;
-  };
-}
-
-export interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  profiles: {
-    id: string;
-    username: string | null;
-    full_name: string | null;
-    avatar_url: string | null;
-  };
-}
+export * from '@/types/feed';
 
 export const useFeed = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<Record<string, Comment[]>>({});
-  const [newComment, setNewComment] = useState('');
-  const [showComments, setShowComments] = useState(false);
-  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const commentInputRef = useRef<HTMLTextAreaElement>(null);
+  
+  const {
+    likedPosts,
+    fetchLikeStatus,
+    likePost,
+    sharePost
+  } = usePostOperations(user);
+  
+  const {
+    comments,
+    newComment,
+    setNewComment,
+    showComments,
+    commentInputRef,
+    toggleComments,
+    submitComment
+  } = useCommentOperations(user);
+  
+  const {
+    navigateToNextPost,
+    navigateToPrevPost,
+    navigateToCreatePost,
+    navigateToProfile,
+    navigateToMessages,
+    navigateToHome
+  } = useNavigation();
 
   useEffect(() => {
     fetchPosts();
@@ -97,24 +94,13 @@ export const useFeed = () => {
       
       if (error) throw error;
       
-      // Initialize likes
-      const initialLikedState: Record<string, boolean> = {};
       if (data) {
+        await fetchLikeStatus(data);
         for (const post of data) {
           await fetchComments(post.id);
-          const { data: likeData } = await supabase
-            .from('likes')
-            .select('*')
-            .eq('post_id', post.id)
-            .eq('user_id', user?.id)
-            .single();
-          
-          initialLikedState[post.id] = !!likeData;
         }
+        setPosts(data);
       }
-      
-      setLikedPosts(initialLikedState);
-      setPosts(data || []);
     } catch (error: any) {
       console.error('Error fetching posts:', error.message);
       toast({
@@ -127,183 +113,14 @@ export const useFeed = () => {
     }
   };
 
-  const fetchComments = async (postId: string) => {
-    try {
-      // Fixed query to correctly join comments with profiles
-      const { data, error } = await supabase
-        .from('comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          profiles(
-            id,
-            username,
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-      
-      if (error) {
-        console.error('Error in comment query:', error);
-        throw error;
-      }
-      
-      // Check if data exists and has the correct structure before updating state
-      if (data && Array.isArray(data)) {
-        // TypeScript validation to ensure proper data structure
-        const validComments = data.filter(item => 
-          item && item.profiles && typeof item.profiles === 'object' && 
-          'id' in item.profiles && 'username' in item.profiles
-        ) as Comment[];
-        
-        setComments(prev => ({
-          ...prev,
-          [postId]: validComments
-        }));
-      }
-    } catch (error: any) {
-      console.error('Error fetching comments:', error.message);
-      // Don't update state with error data
-    }
+  const handleNavigateToNextPost = () => {
+    setCurrentPostIndex(prevIndex => navigateToNextPost(prevIndex, posts));
+    setShowComments(false);
   };
 
-  const navigateToNextPost = () => {
-    if (currentPostIndex < posts.length - 1) {
-      setCurrentPostIndex(prevIndex => prevIndex + 1);
-      setShowComments(false);
-    }
-  };
-
-  const navigateToPrevPost = () => {
-    if (currentPostIndex > 0) {
-      setCurrentPostIndex(prevIndex => prevIndex - 1);
-      setShowComments(false);
-    }
-  };
-
-  const likePost = async (postId: string) => {
-    try {
-      const isCurrentlyLiked = likedPosts[postId];
-      
-      if (isCurrentlyLiked) {
-        // Unlike the post
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', user?.id);
-        
-        if (error) throw error;
-      } else {
-        // Like the post
-        const { error } = await supabase
-          .from('likes')
-          .insert({
-            post_id: postId,
-            user_id: user?.id
-          });
-        
-        if (error) throw error;
-      }
-      
-      // Update local state
-      setLikedPosts(prev => ({
-        ...prev,
-        [postId]: !isCurrentlyLiked
-      }));
-      
-      toast({
-        title: isCurrentlyLiked ? "Unliked" : "Liked",
-        description: isCurrentlyLiked ? "You unliked this post." : "You liked this post!",
-      });
-    } catch (error: any) {
-      console.error('Error toggling like:', error.message);
-      toast({
-        title: "Error",
-        description: "Could not process your reaction. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const toggleComments = async (postId: string) => {
-    setShowComments(!showComments);
-    if (!showComments) {
-      await fetchComments(postId);
-      setTimeout(() => {
-        if (commentInputRef.current) {
-          commentInputRef.current.focus();
-        }
-      }, 100);
-    }
-  };
-
-  const submitComment = async (postId: string) => {
-    if (!newComment.trim()) return;
-    
-    try {
-      const { error } = await supabase
-        .from('comments')
-        .insert({
-          post_id: postId,
-          user_id: user?.id,
-          content: newComment.trim()
-        });
-      
-      if (error) throw error;
-      
-      await fetchComments(postId);
-      setNewComment('');
-      
-      toast({
-        title: "Comment Added",
-        description: "Your comment has been posted.",
-      });
-    } catch (error: any) {
-      console.error('Error adding comment:', error.message);
-      toast({
-        title: "Error",
-        description: "Could not post your comment. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const sharePost = async (postId: string) => {
-    try {
-      // Copy the URL to clipboard
-      await navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
-      
-      toast({
-        title: "Link Copied",
-        description: "Post link copied to clipboard!",
-      });
-    } catch (error) {
-      toast({
-        title: "Sharing Failed",
-        description: "Could not copy the link. Try again later.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const navigateToCreatePost = () => {
-    navigate('/create');
-  };
-
-  const navigateToProfile = (userId: string) => {
-    navigate(`/profile/${userId}`);
-  };
-
-  const navigateToMessages = () => {
-    navigate('/messages');
-  };
-
-  const navigateToHome = () => {
-    navigate('/');
+  const handleNavigateToPrevPost = () => {
+    setCurrentPostIndex(prevIndex => navigateToPrevPost(prevIndex));
+    setShowComments(false);
   };
 
   return {
@@ -316,8 +133,8 @@ export const useFeed = () => {
     showComments,
     likedPosts,
     commentInputRef,
-    navigateToNextPost,
-    navigateToPrevPost,
+    navigateToNextPost: handleNavigateToNextPost,
+    navigateToPrevPost: handleNavigateToPrevPost,
     likePost,
     toggleComments,
     submitComment,
