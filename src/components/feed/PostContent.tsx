@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Avatar } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { User } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -24,22 +26,34 @@ const PostContent: React.FC<PostContentProps> = ({ post, navigateToProfile }) =>
   return (
     <div className="max-w-2xl w-full mx-auto bg-card rounded-xl overflow-hidden shadow-lg">
       <div className="p-4 border-b">
-        <div className="flex items-center">
-          <Avatar onClick={() => navigateToProfile(post.profiles.id)}>
-            <img 
-              src={post.profiles.avatar_url || ''} 
-              alt={post.profiles.username}
-              className="w-10 h-10 rounded-full cursor-pointer"
-            />
-          </Avatar>
-          <div className="ml-3">
-            <p className="font-semibold cursor-pointer" onClick={() => navigateToProfile(post.profiles.id)}>
-              {post.profiles.full_name || post.profiles.username}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              @{post.profiles.username}
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Avatar onClick={() => navigateToProfile(post.profiles.id)}>
+              <img 
+                src={post.profiles.avatar_url || ''} 
+                alt={post.profiles.username}
+                className="w-10 h-10 rounded-full cursor-pointer"
+              />
+            </Avatar>
+            <div className="ml-3">
+              <p className="font-semibold cursor-pointer" onClick={() => navigateToProfile(post.profiles.id)}>
+                {post.profiles.full_name || post.profiles.username}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                @{post.profiles.username}
+              </p>
+            </div>
           </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigateToProfile(post.profiles.id)}
+            className="flex gap-1 items-center"
+          >
+            <User size={16} />
+            <span>Profile</span>
+          </Button>
         </div>
       </div>
       

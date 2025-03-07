@@ -1,45 +1,39 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Home, MessageSquare, Plus } from 'lucide-react';
+import { Home, MessageSquare, PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface FeedHeaderProps {
   navigateToHome: () => void;
   navigateToMessages: () => void;
   navigateToCreatePost: () => void;
+  children?: React.ReactNode;
 }
 
-const FeedHeader: React.FC<FeedHeaderProps> = ({ 
-  navigateToHome, 
-  navigateToMessages, 
-  navigateToCreatePost 
+const FeedHeader: React.FC<FeedHeaderProps> = ({
+  navigateToHome,
+  navigateToMessages,
+  navigateToCreatePost,
+  children
 }) => {
   return (
-    <header className="py-4 px-6 border-b bg-background/95 backdrop-blur-sm dark:bg-gray-900/95 dark:border-gray-800 sticky top-0 z-10">
-      <div className="flex justify-between items-center max-w-6xl mx-auto">
-        <h1 className="text-xl font-bold">Feed</h1>
-        <div className="flex space-x-4">
-          <button 
-            onClick={navigateToHome}
-            title="Go back to home"
-            className="p-2 rounded-full hover:bg-secondary/50"
-          >
-            <Home size={24} />
-          </button>
-          <button 
-            onClick={navigateToMessages}
-            title="Messages"
-            className="p-2 rounded-full hover:bg-secondary/50"
-          >
-            <MessageSquare size={24} />
-          </button>
-          <button 
-            onClick={navigateToCreatePost}
-            title="Create new post"
-            className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            <Plus size={24} />
-          </button>
+    <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b py-3">
+      <div className="container mx-auto px-4 flex justify-between items-center">
+        <Button variant="ghost" onClick={navigateToHome} className="flex gap-1 items-center">
+          <Home size={20} />
+          <span className="sr-only md:not-sr-only">Home</span>
+        </Button>
+
+        <div className="flex items-center gap-2">
+          {children}
+          <Button variant="ghost" onClick={navigateToMessages} className="flex gap-1 items-center">
+            <MessageSquare size={20} />
+            <span className="sr-only md:not-sr-only">Messages</span>
+          </Button>
+          <Button variant="default" onClick={navigateToCreatePost} className="flex gap-1 items-center">
+            <PlusCircle size={20} />
+            <span className="sr-only md:not-sr-only">Create</span>
+          </Button>
         </div>
       </div>
     </header>

@@ -8,8 +8,12 @@ import PostContent from '@/components/feed/PostContent';
 import PostActions from '@/components/feed/PostActions';
 import CommentSection from '@/components/feed/CommentSection';
 import EmptyFeed from '@/components/feed/EmptyFeed';
+import { Button } from '@/components/ui/button';
+import { User } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Feed = () => {
+  const { user } = useAuth();
   const {
     posts,
     currentPostIndex,
@@ -39,7 +43,18 @@ const Feed = () => {
         navigateToHome={navigateToHome}
         navigateToMessages={navigateToMessages}
         navigateToCreatePost={navigateToCreatePost}
-      />
+      >
+        {user && (
+          <Button 
+            variant="ghost" 
+            onClick={() => navigateToProfile(user.id)}
+            className="flex gap-1 items-center"
+          >
+            <User size={20} />
+            <span className="sr-only md:not-sr-only">Profile</span>
+          </Button>
+        )}
+      </FeedHeader>
 
       {/* Main Content - Horizontal Scrolling Feed */}
       <main className="flex-1 relative">
