@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { usePostOperations } from './usePostOperations';
 import { useCommentOperations } from './useCommentOperations';
 import { useNavigation } from './useNavigation';
+import { useMessageNotifications } from './useMessageNotifications';
 import { Post } from '@/types/feed';
 
 export * from '@/types/feed';
@@ -44,6 +44,12 @@ export const useFeed = () => {
     navigateToMessages,
     navigateToHome
   } = useNavigation();
+
+  const { 
+    hasNewMessages, 
+    unreadCount, 
+    markMessagesAsRead 
+  } = useMessageNotifications();
 
   useEffect(() => {
     fetchPosts();
@@ -135,6 +141,9 @@ export const useFeed = () => {
     showComments,
     likedPosts,
     commentInputRef,
+    hasNewMessages,
+    unreadCount,
+    markMessagesAsRead,
     navigateToNextPost: handleNavigateToNextPost,
     navigateToPrevPost: handleNavigateToPrevPost,
     likePost,

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useFeed } from '@/hooks/useFeed';
 import FeedHeader from '@/components/feed/FeedHeader';
@@ -21,6 +22,9 @@ const Feed = () => {
     showComments,
     likedPosts,
     commentInputRef,
+    hasNewMessages,
+    unreadCount,
+    markMessagesAsRead,
     navigateToNextPost,
     navigateToPrevPost,
     likePost,
@@ -38,10 +42,15 @@ const Feed = () => {
       {/* Top Navigation */}
       <FeedHeader 
         navigateToHome={navigateToHome}
-        navigateToMessages={navigateToMessages}
+        navigateToMessages={() => {
+          markMessagesAsRead();
+          navigateToMessages();
+        }}
         navigateToCreatePost={navigateToCreatePost}
         navigateToProfile={navigateToProfile}
         currentUserId={user?.id}
+        hasNotifications={hasNewMessages}
+        notificationCount={unreadCount}
       />
 
       {/* Main Content - Horizontal Scrolling Feed */}

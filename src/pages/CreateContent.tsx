@@ -120,20 +120,20 @@ const CreateContent = () => {
     try {
       setIsUploading(true);
       
-      // 1. Upload file to storage
+      // 1. Upload file to HarmonyHub storage bucket
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
       
       const { error: uploadError, data } = await supabase.storage
-        .from('media')
+        .from('HarmonyHub')
         .upload(filePath, file);
         
       if (uploadError) throw uploadError;
       
       // 2. Get public URL for the file
       const { data: { publicUrl } } = supabase.storage
-        .from('media')
+        .from('HarmonyHub')
         .getPublicUrl(filePath);
       
       // 3. Insert post into database
