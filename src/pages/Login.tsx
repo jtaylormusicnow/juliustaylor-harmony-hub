@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Loader2 } from 'lucide-react';
@@ -16,11 +15,9 @@ const Login = () => {
   const location = useLocation();
   const { toast } = useToast();
   
-  // Get the redirect path from location state or default to '/feed'
   const from = (location.state as any)?.from?.pathname || '/feed';
   
   useEffect(() => {
-    // If user is already logged in, redirect to feed
     if (user) {
       navigate(from, { replace: true });
     }
@@ -41,10 +38,8 @@ const Login = () => {
     try {
       setIsSubmitting(true);
       await signIn(email, password);
-      // Navigation will happen automatically in the useEffect when user state updates
     } catch (error: any) {
       console.error('Login error:', error);
-      // Toast is already shown in the signIn function
     } finally {
       setIsSubmitting(false);
     }
@@ -54,7 +49,6 @@ const Login = () => {
     try {
       setIsSubmitting(true);
       await signInWithGoogle();
-      // Redirect is handled by OAuth flow
     } catch (error: any) {
       console.error('Google sign in error:', error);
       setIsSubmitting(false);
@@ -65,14 +59,11 @@ const Login = () => {
     try {
       setIsSubmitting(true);
       await signInWithFacebook();
-      // Redirect is handled by OAuth flow
     } catch (error: any) {
       console.error('Facebook sign in error:', error);
       setIsSubmitting(false);
     }
   };
-
-  console.log('Login component - rendering with user:', user);
 
   return (
     <div className="min-h-screen flex flex-col">
