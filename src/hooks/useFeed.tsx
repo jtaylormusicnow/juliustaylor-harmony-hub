@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,24 +55,48 @@ export const useFeed = () => {
   useEffect(() => {
     fetchPosts();
     
-    // Subscribe to realtime changes
-    const subscription = supabase
+    // Subscribe to realtime changes for new posts
+    const postsChannel = supabase
       .channel('posts_channel')
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'posts'
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setPosts(prevPosts => [payload.new as Post, ...prevPosts]);
-        } else if (payload.eventType === 'DELETE') {
-          setPosts(prevPosts => prevPosts.filter(post => post.id !== payload.old.id));
+      }, async (payload) => {
+        console.log('New post received:', payload);
+        const newPost = payload.new as Post;
+        
+        // Fetch profile data for the new post
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, avatar_url')
+          .eq('id', newPost.user_id)
+          .single();
+          
+        if (!profileError && profileData) {
+          // Add profile data to the new post
+          const completePost = {
+            ...newPost,
+            profiles: profileData
+          };
+          
+          // Update like status for this post
+          await fetchLikeStatus([completePost]);
+          
+          // Add the new post to the top of the feed
+          setPosts(prevPosts => [completePost, ...prevPosts]);
+          
+          // Show a toast notification for the new post
+          toast({
+            title: "New Post",
+            description: `${profileData.username || 'Someone'} just shared a new post!`,
+          });
         }
       })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(subscription);
+      supabase.removeChannel(postsChannel);
     };
   }, []);
 
@@ -103,6 +128,7 @@ export const useFeed = () => {
       if (error) throw error;
       
       if (data) {
+        console.log('Fetched posts:', data);
         await fetchLikeStatus(data);
         for (const post of data) {
           await fetchComments(post.id);

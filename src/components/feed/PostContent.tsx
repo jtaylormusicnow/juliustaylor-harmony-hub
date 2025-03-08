@@ -33,11 +33,17 @@ const PostContent: React.FC<PostContentProps> = ({ post, navigateToProfile }) =>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Avatar onClick={() => navigateToProfile(post.profiles.id)}>
-              <img 
-                src={post.profiles.avatar_url || ''} 
-                alt={post.profiles.username}
-                className="w-10 h-10 rounded-full cursor-pointer"
-              />
+              {post.profiles.avatar_url ? (
+                <img 
+                  src={post.profiles.avatar_url} 
+                  alt={post.profiles.username || 'User'}
+                  className="w-10 h-10 rounded-full cursor-pointer object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  {(post.profiles.username || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
             </Avatar>
             <div className="ml-3">
               <p className="font-semibold cursor-pointer" onClick={() => navigateToProfile(post.profiles.id)}>
