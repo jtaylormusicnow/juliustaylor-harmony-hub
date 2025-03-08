@@ -64,13 +64,13 @@ export const useFeed = () => {
         table: 'posts'
       }, async (payload) => {
         console.log('New post received:', payload);
-        const newPost = payload.new as Post;
+        const newPost = payload.new as any; // Use 'any' temporarily to access properties
         
         // Fetch profile data for the new post
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, username, full_name, avatar_url')
-          .eq('id', newPost.user_id)
+          .eq('id', newPost.profiles?.id || newPost.user_id)
           .single();
           
         if (!profileError && profileData) {
@@ -81,10 +81,10 @@ export const useFeed = () => {
           };
           
           // Update like status for this post
-          await fetchLikeStatus([completePost]);
+          await fetchLikeStatus([completePost as Post]);
           
           // Add the new post to the top of the feed
-          setPosts(prevPosts => [completePost, ...prevPosts]);
+          setPosts(prevPosts => [completePost as Post, ...prevPosts]);
           
           // Show a toast notification for the new post
           toast({
