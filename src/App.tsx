@@ -11,6 +11,8 @@ import Beats from "./pages/Beats";
 import Merch from "./pages/Merch";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import Feed from "./pages/Feed";
 import Profile from "./pages/Profile";
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/merch" element={<Merch />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             
             {/* Protected Routes */}
             <Route path="/feed" element={<RequireAuth><Feed /></RequireAuth>} />
