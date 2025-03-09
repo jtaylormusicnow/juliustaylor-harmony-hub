@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useFeed } from '@/hooks/useFeed';
 import FeedHeader from '@/components/feed/FeedHeader';
 import ProgressBar from '@/components/feed/ProgressBar';
@@ -20,6 +20,7 @@ const Feed = () => {
   const {
     posts,
     currentPostIndex,
+    setCurrentPostIndex,
     loading,
     comments,
     newComment,
@@ -44,7 +45,7 @@ const Feed = () => {
     navigateToHome
   } = useFeed();
 
-  const [viewMode, setViewMode] = useState<'grid' | 'fullscreen'>('fullscreen');
+  const [viewMode, setViewMode] = useState<'grid' | 'fullscreen'>('grid'); // Default to grid view like Instagram
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [currentReaction, setCurrentReaction] = useState<{
     type: 'headNod' | 'bass' | 'barz' | 'nextLevel' | null;
@@ -125,11 +126,13 @@ const Feed = () => {
           </div>
         ) : posts.length > 0 ? (
           <>
-            {/* Featured Posts Section */}
-            <FeaturedPosts 
-              featuredPosts={featuredPosts}
-              navigateToProfile={navigateToProfile}
-            />
+            {/* Featured Posts Section (Instagram-like stories at top) */}
+            {viewMode === 'grid' && (
+              <FeaturedPosts 
+                featuredPosts={featuredPosts}
+                navigateToProfile={navigateToProfile}
+              />
+            )}
 
             {/* Main Content Area */}
             {viewMode === 'grid' ? (

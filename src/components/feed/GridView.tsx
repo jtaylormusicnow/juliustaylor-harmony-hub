@@ -13,11 +13,11 @@ const GridView: React.FC<GridViewProps> = ({ posts, onSelectPost }) => {
   if (!posts.length) return null;
   
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-2">
+    <div className="grid grid-cols-3 gap-1 p-1">
       {posts.map((post, index) => (
         <div 
           key={post.id}
-          className="relative aspect-square overflow-hidden rounded-md cursor-pointer hover:opacity-90 transition-all hover:scale-[0.98]"
+          className="relative aspect-square overflow-hidden cursor-pointer hover:opacity-90 transition-all hover:scale-[0.98]"
           onClick={() => onSelectPost(index)}
         >
           {post.media_type === 'video' ? (
