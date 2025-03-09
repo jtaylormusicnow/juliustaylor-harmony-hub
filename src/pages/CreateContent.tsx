@@ -137,17 +137,21 @@ const CreateContent = () => {
         .getPublicUrl(filePath);
       
       // 3. Insert post into database
-      const { error: insertError } = await supabase
-        .from('posts')
-        .insert({
-          user_id: user.id,
-          media_url: publicUrl,
-          media_type: isVideo ? 'video' : 'image',
-          caption: caption,
-        });
-        
-      if (insertError) throw insertError;
-      
+ const { error: insertError } = await supabase
+    .from('posts')
+    .insert([
+        {
+            user_id: user.id,  // ✅ Ensure `user_id` is included
+            media_url: publicUrl,
+            media_type: isVideo ? 'video' : 'image',
+            caption: caption,
+        },
+    ]);
+
+if (insertError) {
+    console.error("Upload failed:", insertError.message);
+}
+
       toast({
         title: "Success",
         description: "Your post has been uploaded!",
